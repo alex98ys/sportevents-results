@@ -13,8 +13,6 @@ on:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout repo
@@ -40,9 +38,14 @@ jobs:
           CI: false
         run: npm run bundle
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload JS bundle + JSON files to WordPress via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
-          keep_files: false
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./build/
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          include: '["sportevents-results.js", "**.json"]'
+          exclude: '[]'
+          log-level: minimal
