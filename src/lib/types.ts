@@ -46,6 +46,8 @@ export interface EventInfo {
   noResults?: boolean;
   /** Gender categories present in this contest (e.g. ["Femenina", "Mixta"]) */
   genderCategories?: string[];
+  /** When true, don't split this contest into per-gender selector entries */
+  noGenderSplit?: boolean;
 }
 
 /**

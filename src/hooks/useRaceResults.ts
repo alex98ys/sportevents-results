@@ -366,11 +366,16 @@ export function useRaceResults(config: WidgetConfig): UseRaceResultsReturn {
           (e) => (e.fileKey ?? e.id) === (cfg.fileKey ?? String(cfg.eventId)) && e.contest === cfg.contest,
         );
         const genderCats = info?.genderCategories;
-        if (genderCats && genderCats.length >= 2) {
+        const noGenderSplit = info?.noGenderSplit;
+        if (!noGenderSplit && genderCats && genderCats.length > 0) {
           for (const gender of genderCats) {
+            const suffix = gender === 'Femenina' ? 'Femenino'
+                         : gender === 'Masculina' ? 'Masculino'
+                         : gender === 'Mixta' ? 'Mixto'
+                         : gender;
             expanded.push({
               ...cfg,
-              contestName: `${cfg.contestName ?? ''} ${gender}`.trim(),
+              contestName: `${cfg.contestName ?? ''} ${suffix}`.trim(),
               initialCategory: gender,
             });
           }

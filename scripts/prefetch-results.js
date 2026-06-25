@@ -68,6 +68,28 @@ const EVENT_VARIANTS = {
   // Uncomment and fill in for events with multiple formats (see example above)
 };
 
+/**
+ * Override the contestName stored in the index for specific contests.
+ * Useful when multiple contests (e.g. same category split across two days)
+ * should share the same display name and be grouped by gender in the selector.
+ * Format: { '<eventId>': { '<contestId>': 'New Display Name' } }
+ */
+const CONTEST_NAME_OVERRIDES = {
+  '376174': {
+    '2': 'Open',   // "Open Sábado" → "Open"
+    '3': 'Open',   // "Open Domingo" → "Open"
+  },
+};
+
+/**
+ * Contests that should NOT be split by gender in the results selector.
+ * They appear as a single combined entry regardless of genderCategories.
+ * Format: { '<eventId>': [contestId1, contestId2, ...] }
+ */
+const CONTEST_NO_GENDER_SPLIT = {
+  '376174': [4],   // Strong Kids: show as single combined entry
+};
+
 // ─── Contest-based format detection ──────────────────────────────────────────
 // Each event's contests are fetched from the API.  The contest NAME determines
 // the format.  Contest names containing 'pareja/duo/doble' → 'pairs';
@@ -756,16 +778,19 @@ async function main() {
           attachAgeGroups(rows, await fetchAgeGroupMap(sessionId, eventId));
           const resolvedFormat = detectFormatFromMembers(rows, format);
           const genderCategories = [...new Set(rows.map(r => r._pairGender).filter(Boolean))].sort();
+          const contestDisplayName = (CONTEST_NAME_OVERRIDES[String(eventId)] ?? {})[String(c.ID)] ?? c.Name;
+          const isNoGenderSplit = (CONTEST_NO_GENDER_SPLIT[String(eventId)] ?? []).includes(c.ID);
           const info = {
             id: String(eventId), fileKey,
             name:        ev.EventName,
-            contestName: c.Name,
+            contestName: contestDisplayName,
             date:        ev.EventDate ? ev.EventDate.slice(0, 10) : '',
             location:    ev.EventLocation ?? '',
             listName:    usedListName,
             contest:     c.ID,
             format:      resolvedFormat,
             ...(genderCategories.length > 0 && { genderCategories }),
+            ...(isNoGenderSplit && { noGenderSplit: true }),
           };
           const eventPath = path.join(ROOT, 'public', `race-data-${fileKey}.json`);
           fs.writeFileSync(eventPath, JSON.stringify({ info, rows }, null, 2), 'utf8');
